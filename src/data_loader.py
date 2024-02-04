@@ -2,7 +2,7 @@ import torch
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
-DATA_PATH = "dataset"
+DATA_PATH = "/vol/bitbucket/mc620/DeepLearningCW1/dataset/"
 
 
 def get_transformed_data():

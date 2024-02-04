@@ -1,6 +1,9 @@
 import torch
 import torch.optim as optim
 from model.resnet import MyResNet
+from src.data_loader import get_transformed_data
+import torch.nn.functional as F
+import wandb
 
 dtype = torch.float32
 rng_seed = 90
@@ -37,9 +40,26 @@ def check_accuracy(loader, model, analysis=False):
             # confusion(stack_predicts, stack_labels)
             # incorrect_preds(preds, y, x)
         return float(acc)
+    
+def get_avg_validation_loss():
+    model.eval()
+    total_val_loss = 0
+    total_val_batches = 0
+    with torch.no_grad():
+        for x_val, y_val in loader_val:
+            x_val = x_val.to(device=device, dtype=dtype)
+            y_val = y_val.to(device=device, dtype=torch.long)
+            val_scores = model(x_val)
+            val_loss = F.cross_entropy(val_scores, y_val)
+
+            total_val_loss += val_loss.item()
+            total_val_batches += 1
+
+    avg_val_loss = total_val_loss / total_val_batches
+    return avg_val_loss
 
 
-def train_part(model, optimizer, device, epochs=1):
+def train_part(model, optimizer, device, loader_train, epochs=1):
     """
     Train a model on NaturalImageNet using the PyTorch Module API.
 
@@ -52,6 +72,8 @@ def train_part(model, optimizer, device, epochs=1):
     """
     model = model.to(device=device)  # move the model parameters to CPU/GPU
     for e in range(epochs):
+        total_loss = 0
+        total_batches = 0
         for t, (x, y) in enumerate(loader_train):
             model.train()  # put model to training mode
             x = x.to(device=device, dtype=dtype)  # move to device, e.g. GPU
@@ -69,9 +91,16 @@ def train_part(model, optimizer, device, epochs=1):
             # Update the parameters of the model using the gradients
             optimizer.step()
 
-            if t % print_every == 0:
+            if t % 10 == 0:
                 print("Epoch: %d, Iteration %d, loss = %.4f" % (e, t, loss.item()))
-        check_accuracy(loader_val, model)
+            total_loss += loss.item()
+            total_batches += 1
+
+        avg_train_loss = total_loss / total_batches
+        avg_validation_loss = get_avg_validation_loss()
+        print(f"Epoch: {e}, Avg Train Loss: {avg_train_loss:.4f}, Avg Validation Loss: {avg_validation_loss:.4f}")
+        acc = check_accuracy(loader_val, model)
+        wandb.log({"epoch": e, "accuracy": acc, "train_loss": avg_train_loss, "validation_loss": avg_validation_loss})
 
 
 def get_device(USE_GPU=True):
@@ -79,23 +108,34 @@ def get_device(USE_GPU=True):
         device = torch.device("cuda:0")
     else:
         device = torch.device("cpu")
-
     print(device)
+    return device
 
 
 if __name__ == "__main__":
+    # Initialise Wandb 
+    wandb.init(project="DL Coursework 1", name="Double-Depth-Model", config={
+        "epochs": 30,
+        "batch_size": 128,
+        "lr": 1e-4,
+    })
+    config = wandb.config
+    
     # define and train the network
     model = MyResNet()
-    optimizer = optim.Adamax(model.parameters(), lr=0.0001, weight_decay=1e-7)
+    optimizer = optim.Adamax(model.parameters(), lr=config.lr, weight_decay=1e-7)
     device = get_device()
+    loader_train, loader_val, loader_test = get_transformed_data()
 
     params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print("Total number of parameters is: {}".format(params))
 
-    train_part(model, optimizer, device, epochs=10)
+    train_part(model, optimizer, device, loader_train, epochs=config.epochs)
 
     # report test set accuracy
     check_accuracy(loader_val, model, analysis=True)
 
     # save the model
     torch.save(model.state_dict(), "model.pt")
+    wandb.save("model.pt")
+    wandb.finish()
