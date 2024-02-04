@@ -1,0 +1,188 @@
+Sun Feb  4 19:00:41 2024       
++---------------------------------------------------------------------------------------+
+| NVIDIA-SMI 535.104.05             Driver Version: 535.104.05   CUDA Version: 12.2     |
+|-----------------------------------------+----------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |         Memory-Usage | GPU-Util  Compute M. |
+|                                         |                      |               MIG M. |
+|=========================================+======================+======================|
+|   0  NVIDIA A40                     Off | 00000000:02:00.0 Off |                    0 |
+|  0%   30C    P8              21W / 300W |      4MiB / 46068MiB |      0%      Default |
+|                                         |                      |                  N/A |
++-----------------------------------------+----------------------+----------------------+
+                                                                                         
++---------------------------------------------------------------------------------------+
+| Processes:                                                                            |
+|  GPU   GI   CI        PID   Type   Process name                            GPU Memory |
+|        ID   ID                                                             Usage      |
+|=======================================================================================|
+|  No running processes found                                                           |
++---------------------------------------------------------------------------------------+
+ 19:00:41 up 23 days,  9:18,  2 users,  load average: 0.04, 0.07, 0.08
+wandb: Agent Starting Run: ep95fl12 with config:
+wandb: 	batch: 112
+wandb: 	decay: 0.0014637265654886228
+wandb: 	epochs: 20
+wandb: 	layers: (16, 2), (32, 2), (64, 2), (128, 2), (256, 2), (512, 2)
+wandb: 	lr: 0.003198349470257366
+wandb: 	momentum: 0.8759750446810172
+wandb: 	optimizer: sgd
+wandb: Currently logged in as: marcochan616. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.16.2
+wandb: Run data is saved locally in /vol/bitbucket/mc620/DeepLearningCW1/wandb/run-20240204_190052-ep95fl12
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run pretty-sweep-1
+wandb: ⭐️ View project at https://wandb.ai/marcochan616/DL%20Coursework%201
+wandb: 🧹 View sweep at https://wandb.ai/marcochan616/DL%20Coursework%201/sweeps/v5c0jaj1
+wandb: 🚀 View run at https://wandb.ai/marcochan616/DL%20Coursework%201/runs/ep95fl12
+Create sweep with ID: v5c0jaj1
+Sweep URL: https://wandb.ai/marcochan616/DL%20Coursework%201/sweeps/v5c0jaj1
+cuda:0
+Dataset Length: 
+ Train: 17986, Validation: 1998, Test: 2000
+Total number of parameters is: 11204164
+Traceback (most recent call last):
+  File "/homes/mc620/Documents/Deep-Learning-CW1/src/main.py", line 159, in train
+    train_part(model, optimizer, device, loader_train, loader_val, epochs=config.epochs)
+  File "/homes/mc620/Documents/Deep-Learning-CW1/src/main.py", line 104, in train_part
+    scores = model(x)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/homes/mc620/Documents/Deep-Learning-CW1/model/resnet.py", line 83, in forward
+    x = self.layer1(x)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/homes/mc620/Documents/Deep-Learning-CW1/model/resnet.py", line 32, in forward
+    out = self.left(x)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 463, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 459, in _conv_forward
+    return F.conv2d(input, weight, bias, self.stride,
+RuntimeError: Given groups=1, weight of size [16, 16, 3, 3], expected input[128, 512, 4, 4] to have 16 channels, but got 512 channels instead
+wandb: - 0.003 MB of 0.003 MB uploadedwandb: \ 0.003 MB of 0.003 MB uploadedwandb: | 0.007 MB of 0.007 MB uploadedwandb:                                                                                
+wandb: 🚀 View run pretty-sweep-1 at: https://wandb.ai/marcochan616/DL%20Coursework%201/runs/ep95fl12
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: /vol/bitbucket/mc620/DeepLearningCW1/wandb/run-20240204_190052-ep95fl12/logs
+Run ep95fl12 errored: RuntimeError('Given groups=1, weight of size [16, 16, 3, 3], expected input[128, 512, 4, 4] to have 16 channels, but got 512 channels instead')
+wandb: ERROR Run ep95fl12 errored: RuntimeError('Given groups=1, weight of size [16, 16, 3, 3], expected input[128, 512, 4, 4] to have 16 channels, but got 512 channels instead')
+wandb: Agent Starting Run: l8urznb8 with config:
+wandb: 	batch: 24
+wandb: 	decay: 0.0021469201338260185
+wandb: 	epochs: 15
+wandb: 	layers: (16, 2), (32, 2), (64, 2), (128, 2), (256, 2), (512, 2)
+wandb: 	lr: 0.00011253778467370814
+wandb: 	momentum: 0.5130740000893218
+wandb: 	optimizer: adamax
+wandb: Tracking run with wandb version 0.16.2
+wandb: Run data is saved locally in /vol/bitbucket/mc620/DeepLearningCW1/wandb/run-20240204_190114-l8urznb8
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run swept-sweep-2
+wandb: ⭐️ View project at https://wandb.ai/marcochan616/DL%20Coursework%201
+wandb: 🧹 View sweep at https://wandb.ai/marcochan616/DL%20Coursework%201/sweeps/v5c0jaj1
+wandb: 🚀 View run at https://wandb.ai/marcochan616/DL%20Coursework%201/runs/l8urznb8
+cuda:0
+Dataset Length: 
+ Train: 17986, Validation: 1998, Test: 2000
+Total number of parameters is: 11204164
+Traceback (most recent call last):
+  File "/homes/mc620/Documents/Deep-Learning-CW1/src/main.py", line 159, in train
+    train_part(model, optimizer, device, loader_train, loader_val, epochs=config.epochs)
+  File "/homes/mc620/Documents/Deep-Learning-CW1/src/main.py", line 104, in train_part
+    scores = model(x)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/homes/mc620/Documents/Deep-Learning-CW1/model/resnet.py", line 83, in forward
+    x = self.layer1(x)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/homes/mc620/Documents/Deep-Learning-CW1/model/resnet.py", line 32, in forward
+    out = self.left(x)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 463, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 459, in _conv_forward
+    return F.conv2d(input, weight, bias, self.stride,
+RuntimeError: Given groups=1, weight of size [16, 16, 3, 3], expected input[128, 512, 4, 4] to have 16 channels, but got 512 channels instead
+wandb: - 0.003 MB of 0.003 MB uploadedwandb: \ 0.003 MB of 0.003 MB uploadedwandb: | 0.007 MB of 0.007 MB uploadedwandb:                                                                                
+wandb: 🚀 View run swept-sweep-2 at: https://wandb.ai/marcochan616/DL%20Coursework%201/runs/l8urznb8
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: /vol/bitbucket/mc620/DeepLearningCW1/wandb/run-20240204_190114-l8urznb8/logs
+Run l8urznb8 errored: RuntimeError('Given groups=1, weight of size [16, 16, 3, 3], expected input[128, 512, 4, 4] to have 16 channels, but got 512 channels instead')
+wandb: ERROR Run l8urznb8 errored: RuntimeError('Given groups=1, weight of size [16, 16, 3, 3], expected input[128, 512, 4, 4] to have 16 channels, but got 512 channels instead')
+wandb: Sweep Agent: Waiting for job.
+wandb: Job received.
+wandb: Agent Starting Run: zebzxkhh with config:
+wandb: 	batch: 16
+wandb: 	decay: 0.0009326850947486456
+wandb: 	epochs: 15
+wandb: 	layers: (16, 2), (32, 2), (64, 2), (128, 2), (256, 2), (512, 2)
+wandb: 	lr: 0.0021140337822323383
+wandb: 	momentum: 0.42472987203522305
+wandb: 	optimizer: adamax
+wandb: Tracking run with wandb version 0.16.2
+wandb: Run data is saved locally in /vol/bitbucket/mc620/DeepLearningCW1/wandb/run-20240204_190134-zebzxkhh
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run olive-sweep-3
+wandb: ⭐️ View project at https://wandb.ai/marcochan616/DL%20Coursework%201
+wandb: 🧹 View sweep at https://wandb.ai/marcochan616/DL%20Coursework%201/sweeps/v5c0jaj1
+wandb: 🚀 View run at https://wandb.ai/marcochan616/DL%20Coursework%201/runs/zebzxkhh
+cuda:0
+Dataset Length: 
+ Train: 17986, Validation: 1998, Test: 2000
+Total number of parameters is: 11204164
+Traceback (most recent call last):
+  File "/homes/mc620/Documents/Deep-Learning-CW1/src/main.py", line 159, in train
+    train_part(model, optimizer, device, loader_train, loader_val, epochs=config.epochs)
+  File "/homes/mc620/Documents/Deep-Learning-CW1/src/main.py", line 104, in train_part
+    scores = model(x)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/homes/mc620/Documents/Deep-Learning-CW1/model/resnet.py", line 83, in forward
+    x = self.layer1(x)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/homes/mc620/Documents/Deep-Learning-CW1/model/resnet.py", line 32, in forward
+    out = self.left(x)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 463, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/vol/bitbucket/mc620/DeepLearningCW1/venv/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 459, in _conv_forward
+    return F.conv2d(input, weight, bias, self.stride,
+RuntimeError: Given groups=1, weight of size [16, 16, 3, 3], expected input[128, 512, 4, 4] to have 16 channels, but got 512 channels instead
+wandb: - 0.003 MB of 0.003 MB uploadedwandb: \ 0.003 MB of 0.007 MB uploadedwandb: | 0.003 MB of 0.007 MB uploadedwandb: / 0.007 MB of 0.007 MB uploadedwandb:                                                                                
+wandb: 🚀 View run olive-sweep-3 at: https://wandb.ai/marcochan616/DL%20Coursework%201/runs/zebzxkhh
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: /vol/bitbucket/mc620/DeepLearningCW1/wandb/run-20240204_190134-zebzxkhh/logs
+Run zebzxkhh errored: RuntimeError('Given groups=1, weight of size [16, 16, 3, 3], expected input[128, 512, 4, 4] to have 16 channels, but got 512 channels instead')
+wandb: ERROR Run zebzxkhh errored: RuntimeError('Given groups=1, weight of size [16, 16, 3, 3], expected input[128, 512, 4, 4] to have 16 channels, but got 512 channels instead')
+Detected 3 failed runs in the first 60 seconds, killing sweep.
+wandb: ERROR Detected 3 failed runs in the first 60 seconds, killing sweep.
+wandb: To disable this check set WANDB_AGENT_DISABLE_FLAPPING=true

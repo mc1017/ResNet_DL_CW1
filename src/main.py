@@ -4,13 +4,35 @@ from model.resnet import MyResNet
 from src.data_loader import get_transformed_data
 import torch.nn.functional as F
 import wandb
+import ast
+import os
 
 dtype = torch.float32
 rng_seed = 90
 torch.manual_seed(rng_seed)
 
 
-def check_accuracy(loader, model, analysis=False):
+SWEEP_CONFIG = {
+    "method": "random",
+    "run_cap": 50,
+    "name": "Random Search",
+    "metric": {"goal": "maximize", "name": "Validation Accuracy"},
+    "parameters": {
+        "epochs": {"values": [10, 15, 20]},
+        "batch": {"min": 16, "max": 128, "q": 8, "distribution": "q_log_uniform_values"},
+        "lr": {"min": 1e-5, "max": 1e-1, "distribution": "log_uniform_values"},
+        "momentum": {"min": 1e-2, "max": 1e0, "distribution": "log_uniform_values"},
+        "decay": {"min": 1e-6, "max": 1e-2, "distribution": "log_uniform_values"},
+        'optimizer': {
+            'values': ['adamax', 'adam', 'sgd']
+        },
+        'layers': {
+            'values': ['(16, 2), (32, 2), (64, 2), (128, 2), (256, 2), (512, 2)']
+        },
+    },
+}
+
+def check_accuracy(loader, model, device, analysis=False):
     # function for test accuracy on validation and test set
 
     num_correct = 0
@@ -41,7 +63,7 @@ def check_accuracy(loader, model, analysis=False):
             # incorrect_preds(preds, y, x)
         return float(acc)
     
-def get_avg_validation_loss():
+def get_avg_validation_loss(model, loader_val, device):
     model.eval()
     total_val_loss = 0
     total_val_batches = 0
@@ -59,7 +81,7 @@ def get_avg_validation_loss():
     return avg_val_loss
 
 
-def train_part(model, optimizer, device, loader_train, epochs=1):
+def train_part(model, optimizer, device, loader_train, loader_val, epochs=1):
     """
     Train a model on NaturalImageNet using the PyTorch Module API.
 
@@ -97,10 +119,10 @@ def train_part(model, optimizer, device, loader_train, epochs=1):
             total_batches += 1
 
         avg_train_loss = total_loss / total_batches
-        avg_validation_loss = get_avg_validation_loss()
+        avg_validation_loss = get_avg_validation_loss(model, loader_val, device)
         print(f"Epoch: {e}, Avg Train Loss: {avg_train_loss:.4f}, Avg Validation Loss: {avg_validation_loss:.4f}")
         acc = check_accuracy(loader_val, model)
-        wandb.log({"epoch": e, "accuracy": acc, "train_loss": avg_train_loss, "validation_loss": avg_validation_loss})
+        wandb.log({"accuracy": acc, "train_loss": avg_train_loss, "validation_loss": avg_validation_loss})
 
 
 def get_device(USE_GPU=True):
@@ -111,31 +133,40 @@ def get_device(USE_GPU=True):
     print(device)
     return device
 
+def build_optimiser(model, optimizer, learning_rate, decay=1e-7, momentum=0.9):
+    if optimizer == "adamax":
+        optimizer = optim.Adamax(model.parameters(), lr=learning_rate, weight_decay=decay)
+    elif optimizer == "sgd":
+        optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
+    elif optimizer == "adam":
+        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    return optimizer
+
+
+def train(config = None):
+    with wandb.init(config=config):
+        config = wandb.config
+        
+        # define and train the network
+        layers = ast.literal_eval(config.layers)
+        model = MyResNet(layers)
+        device = get_device()
+        loader_train, loader_val, loader_test = get_transformed_data()
+
+        params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        print("Total number of parameters is: {}".format(params))
+        optimizer = build_optimiser(model, config.optimizer, config.lr, config.decay, config.momentum)
+        train_part(model, optimizer, device, loader_train, loader_val, epochs=config.epochs)
+
+        # report test set accuracy
+        check_accuracy(loader_test, model, device, analysis=True)
+
+        # save the model
+        torch.save(model.state_dict(), f"model_{wandb.run.id}.pt")
 
 if __name__ == "__main__":
-    # Initialise Wandb 
-    wandb.init(project="DL Coursework 1", name="Double-Depth-Model", config={
-        "epochs": 30,
-        "batch_size": 128,
-        "lr": 1e-4,
-    })
-    config = wandb.config
+    os.environ['WANDB_DIR'] = '/vol/bitbucket/mc620/DeepLearningCW1/' 
+    sweep_id = wandb.sweep(sweep=SWEEP_CONFIG, project="DL Coursework 1")
+    wandb.agent(sweep_id, train, count=5)
     
-    # define and train the network
-    model = MyResNet()
-    optimizer = optim.Adamax(model.parameters(), lr=config.lr, weight_decay=1e-7)
-    device = get_device()
-    loader_train, loader_val, loader_test = get_transformed_data()
-
-    params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    print("Total number of parameters is: {}".format(params))
-
-    train_part(model, optimizer, device, loader_train, epochs=config.epochs)
-
-    # report test set accuracy
-    check_accuracy(loader_val, model, analysis=True)
-
-    # save the model
-    torch.save(model.state_dict(), "model.pt")
-    wandb.save("model.pt")
-    wandb.finish()
+    

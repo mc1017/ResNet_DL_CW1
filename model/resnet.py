@@ -1,46 +1,34 @@
 # define resnet building blocks
+import torch
 import torch.nn.functional as F
 import torch.nn as nn
-from torch.nn import Conv2d, MaxPool2d
+from torch.nn import Conv2d, AdaptiveMaxPool2d 
 
 
 class ResidualBlock(nn.Module):
     def __init__(self, inchannel, outchannel, stride=1):
+
         super(ResidualBlock, self).__init__()
 
-        self.left = nn.Sequential(
-            Conv2d(
-                inchannel,
-                outchannel,
-                kernel_size=3,
-                stride=stride,
-                padding=1,
-                bias=False,
-            ),
-            nn.BatchNorm2d(outchannel),
-            nn.ReLU(inplace=True),
-            Conv2d(
-                outchannel, outchannel, kernel_size=3, stride=1, padding=1, bias=False
-            ),
-            nn.BatchNorm2d(outchannel),
-        )
+        self.left = nn.Sequential(Conv2d(inchannel, outchannel, kernel_size=3,
+                                         stride=stride, padding=1, bias=False),
+                                  nn.BatchNorm2d(outchannel),
+                                  nn.ReLU(inplace=True),
+                                  Conv2d(outchannel, outchannel, kernel_size=3,
+                                         stride=1, padding=1, bias=False),
+                                  nn.BatchNorm2d(outchannel))
 
         self.shortcut = nn.Sequential()
 
         if stride != 1 or inchannel != outchannel:
-            self.shortcut = nn.Sequential(
-                Conv2d(
-                    inchannel,
-                    outchannel,
-                    kernel_size=1,
-                    stride=stride,
-                    padding=0,
-                    bias=False,
-                ),
-                nn.BatchNorm2d(outchannel),
-            )
+
+            self.shortcut = nn.Sequential(Conv2d(inchannel, outchannel,
+                                                 kernel_size=1, stride=stride,
+                                                 padding = 0, bias=False),
+                                          nn.BatchNorm2d(outchannel) )
 
     def forward(self, x):
+
         out = self.left(x)
 
         out += self.shortcut(x)
@@ -50,67 +38,59 @@ class ResidualBlock(nn.Module):
         return out
 
 
+
 # define resnet
 
-
 class ResNet(nn.Module):
-    def __init__(self, ResidualBlock, num_classes=20):
+
+    def __init__(self, ResidualBlock, layers, num_classes = 20):
+
         super(ResNet, self).__init__()
 
         self.inchannel = 16
-        self.conv1 = nn.Sequential(
-            Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(16),
-            nn.ReLU(),
-        )
-
-        self.layer1 = self.make_layer(ResidualBlock, 16, 2, stride=2)
-        self.layer7 = self.make_layer(ResidualBlock, 16, 2, stride=1) 
-        self.layer2 = self.make_layer(ResidualBlock, 32, 2, stride=2)
-        self.layer8 = self.make_layer(ResidualBlock, 32, 2, stride=1) 
-        self.layer3 = self.make_layer(ResidualBlock, 64, 2, stride=2)
-        self.layer9 = self.make_layer(ResidualBlock, 64, 2, stride=1)
-        self.layer4 = self.make_layer(ResidualBlock, 128, 2, stride=2)
-        self.layer10 = self.make_layer(ResidualBlock, 128, 2, stride=1)
-        self.layer5 = self.make_layer(ResidualBlock, 256, 2, stride=2)
-        self.layer11 = self.make_layer(ResidualBlock, 256, 2, stride=1)
-        self.layer6 = self.make_layer(ResidualBlock, 512, 2, stride=2)
-        self.layer12 = self.make_layer(ResidualBlock, 512, 2, stride=1)
-        self.maxpool = MaxPool2d(4)
+        self.conv1 = nn.Sequential(Conv2d(3, 16, kernel_size = 3, stride = 1,
+                                            padding = 1, bias = False),
+                                  nn.BatchNorm2d(16),
+                                  nn.ReLU())
+        self.num_layers = len(layers)
+        for i, (channels, blocks) in enumerate(layers):
+            setattr(self,f'layer{i+1}', self.make_layer(ResidualBlock, channels, blocks, stride=2))
+        self.maxpool = AdaptiveMaxPool2d((1, 1))
         self.fc = nn.Linear(512, num_classes)
 
+
     def make_layer(self, block, channels, num_blocks, stride):
+
         strides = [stride] + [1] * (num_blocks - 1)
 
         layers = []
 
         for stride in strides:
+
             layers.append(block(self.inchannel, channels, stride))
 
             self.inchannel = channels
 
         return nn.Sequential(*layers)
 
+
     def forward(self, x):
+
         x = self.conv1(x)
+        for i in range(self.num_layers):
+            layer = getattr(self, f'layer{i+1}')
+            x = layer(x) 
         x = self.layer1(x)
-        x = self.layer7(x)
         x = self.layer2(x)
-        x = self.layer8(x)
         x = self.layer3(x)
-        x = self.layer9(x)
         x = self.layer4(x)
-        x = self.layer10(x)
         x = self.layer5(x)
-        x = self.layer11(x)
         x = self.layer6(x)
-        x = self.layer12(x)
         x = self.maxpool(x)
         x = x.view(x.size(0), -1)
         x = self.fc(x)
         return x
 
-
 # please do not change the name of this class
-def MyResNet():
-    return ResNet(ResidualBlock)
+def MyResNet(layers):
+    return ResNet(ResidualBlock, layers)
