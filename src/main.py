@@ -16,18 +16,20 @@ SWEEP_CONFIG = {
     "method": "random",
     "run_cap": 50,
     "name": "Random Search",
-    "metric": {"goal": "maximize", "name": "Validation Accuracy"},
+    "metric": {"goal": "maximize", "name": "accuracy"},
     "parameters": {
-        "epochs": {"values": [10, 15, 20]},
-        "batch": {"min": 16, "max": 128, "q": 8, "distribution": "q_log_uniform_values"},
+        "epochs": {"values": [15]},
+        "batch": {"min": 16, "max": 256, "q": 8, "distribution": "q_log_uniform_values"},
         "lr": {"min": 1e-5, "max": 1e-1, "distribution": "log_uniform_values"},
         "momentum": {"min": 1e-2, "max": 1e0, "distribution": "log_uniform_values"},
         "decay": {"min": 1e-6, "max": 1e-2, "distribution": "log_uniform_values"},
         'optimizer': {
-            'values': ['adamax', 'adam', 'sgd']
+            'values': ['adamax', 'adam', 'sgd', 'adamw']
         },
         'layers': {
-            'values': ['(16, 2), (32, 2), (64, 2), (128, 2), (256, 2), (512, 2)']
+            'values': ['(16, 2), (32, 2), (64, 2), (128, 2), (256, 2), (512, 2)',
+                       '(16, 2), (32, 2), (32, 2), (32, 2), (32, 2), (32, 2)',
+                       '(16, 2), (32, 2), (64, 2), (128, 2), (256, 2), (512, 2), (1024, 2), (2048, 2), (4096, 2)']
         },
     },
 }
@@ -121,7 +123,7 @@ def train_part(model, optimizer, device, loader_train, loader_val, epochs=1):
         avg_train_loss = total_loss / total_batches
         avg_validation_loss = get_avg_validation_loss(model, loader_val, device)
         print(f"Epoch: {e}, Avg Train Loss: {avg_train_loss:.4f}, Avg Validation Loss: {avg_validation_loss:.4f}")
-        acc = check_accuracy(loader_val, model)
+        acc = check_accuracy(loader_val, model, device)
         wandb.log({"accuracy": acc, "train_loss": avg_train_loss, "validation_loss": avg_validation_loss})
 
 
@@ -140,6 +142,8 @@ def build_optimiser(model, optimizer, learning_rate, decay=1e-7, momentum=0.9):
         optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
     elif optimizer == "adam":
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    elif optimizer == "adamw":
+        optimizer = optim.AdamW(model.parameters(), lr=learning_rate)
     return optimizer
 
 
@@ -149,6 +153,7 @@ def train(config = None):
         
         # define and train the network
         layers = ast.literal_eval(config.layers)
+        print("Layers Config",layers)
         model = MyResNet(layers)
         device = get_device()
         loader_train, loader_val, loader_test = get_transformed_data()
@@ -161,12 +166,17 @@ def train(config = None):
         # report test set accuracy
         check_accuracy(loader_test, model, device, analysis=True)
 
-        # save the model
-        torch.save(model.state_dict(), f"model_{wandb.run.id}.pt")
+        # Save the model
+        # Define the directory where you want to save your models
+        model_save_dir = '/vol/bitbucket/mc620/DeepLearningCW1/models/'
+        os.makedirs(model_save_dir, exist_ok=True)
+        model_save_path = os.path.join(model_save_dir, f"model_{wandb.run.id}.pt")
+        torch.save(model.state_dict(), model_save_path)
 
 if __name__ == "__main__":
     os.environ['WANDB_DIR'] = '/vol/bitbucket/mc620/DeepLearningCW1/' 
-    sweep_id = wandb.sweep(sweep=SWEEP_CONFIG, project="DL Coursework 1")
-    wandb.agent(sweep_id, train, count=5)
+    # sweep_id = wandb.sweep(sweep=SWEEP_CONFIG, project="DL Coursework 1")
+    sweep_id = "0ts0t17u"
+    wandb.agent(sweep_id, train, project="DL Coursework 1", count=3)
     
     
