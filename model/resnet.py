@@ -55,8 +55,9 @@ class ResNet(nn.Module):
         self.num_layers = len(layers)
         for i, (channels, blocks) in enumerate(layers):
             setattr(self,f'layer{i+1}', self.make_layer(ResidualBlock, channels, blocks, stride=2))
+            last_layer_channels = channels
         self.maxpool = AdaptiveMaxPool2d((1, 1))
-        self.fc = nn.Linear(512, num_classes)
+        self.fc = nn.Linear(last_layer_channels, num_classes)
 
 
     def make_layer(self, block, channels, num_blocks, stride):
@@ -80,12 +81,6 @@ class ResNet(nn.Module):
         for i in range(self.num_layers):
             layer = getattr(self, f'layer{i+1}')
             x = layer(x) 
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.layer4(x)
-        x = self.layer5(x)
-        x = self.layer6(x)
         x = self.maxpool(x)
         x = x.view(x.size(0), -1)
         x = self.fc(x)

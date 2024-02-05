@@ -15,7 +15,7 @@ torch.manual_seed(rng_seed)
 SWEEP_CONFIG = {
     "method": "random",
     "run_cap": 50,
-    "name": "Random Search",
+    "name": "No Adam, Changed Archi",
     "metric": {"goal": "maximize", "name": "accuracy"},
     "parameters": {
         "epochs": {"values": [15]},
@@ -24,10 +24,10 @@ SWEEP_CONFIG = {
         "momentum": {"min": 1e-2, "max": 1e0, "distribution": "log_uniform_values"},
         "decay": {"min": 1e-6, "max": 1e-2, "distribution": "log_uniform_values"},
         'optimizer': {
-            'values': ['adamax', 'adam', 'sgd', 'adamw']
+            'values': ['adam', 'sgd', 'adamw'] #'adamax',
         },
         'layers': {
-            'values': ['(16, 2), (32, 2), (64, 2), (128, 2), (256, 2), (512, 2)',
+            'values': [
                        '(16, 2), (32, 2), (32, 2), (32, 2), (32, 2), (32, 2)',
                        '(16, 2), (32, 2), (64, 2), (128, 2), (256, 2), (512, 2), (1024, 2), (2048, 2), (4096, 2)']
         },
@@ -176,7 +176,8 @@ def train(config = None):
 if __name__ == "__main__":
     os.environ['WANDB_DIR'] = '/vol/bitbucket/mc620/DeepLearningCW1/' 
     # sweep_id = wandb.sweep(sweep=SWEEP_CONFIG, project="DL Coursework 1")
-    sweep_id = "0ts0t17u"
-    wandb.agent(sweep_id, train, project="DL Coursework 1", count=3)
+    sweep_id = "m4mwb9u0"
+    print("Sweep_id",sweep_id)
+    wandb.agent(sweep_id, train, project="DL Coursework 1", count=50)
     
     
