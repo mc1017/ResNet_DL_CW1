@@ -60,7 +60,7 @@ class BottleneckResidualBlock(nn.Module):
                                                  padding = 0, bias=False),
                                           nn.BatchNorm2d(outchannel) )
     def forward(self, x):
-        out = self.left(x)
+        out = self.bottleneck(x)
         out += self.shortcut(x)
         out = F.relu(out)
         return out

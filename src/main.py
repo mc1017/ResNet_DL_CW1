@@ -14,22 +14,25 @@ torch.manual_seed(rng_seed)
 
 SWEEP_CONFIG = {
     "method": "random",
-    "run_cap": 50,
-    "name": "No Adam, Changed Archi",
+    "run_cap": 500,
+    "name": "Early Stopping + Less Epoch + Adam",
     "metric": {"goal": "maximize", "name": "accuracy"},
     "parameters": {
-        "epochs": {"values": [15]},
+        "epochs": {"values": [10]},
         "batch": {"min": 16, "max": 256, "q": 8, "distribution": "q_log_uniform_values"},
-        "lr": {"min": 1e-5, "max": 1e-1, "distribution": "log_uniform_values"},
+        "lr": {"min": 1e-4, "max": 5e-2, "distribution": "log_uniform_values"},
         "momentum": {"min": 1e-2, "max": 1e0, "distribution": "log_uniform_values"},
         "decay": {"min": 1e-6, "max": 1e-2, "distribution": "log_uniform_values"},
         'optimizer': {
-            'values': ['adam', 'sgd', 'adamw'] #'adamax',
+            'values': ['adam', 'adamw'] #'adamax', 'sgd'
+        },
+        'blocks': {
+            'values': ['residual', 'bottleneck'] # 'wide', ,
         },
         'layers': {
-            'values': [
-                       '(16, 2), (32, 2), (32, 2), (32, 2), (32, 2), (32, 2)',
-                       '(16, 2), (32, 2), (64, 2), (128, 2), (256, 2), (512, 2), (1024, 2), (2048, 2), (4096, 2)']
+            'values': ['(2, 2, 2, 2)',
+                       '(3, 4, 6, 3)',
+                       '(2, 2, 2, 2, 2, 2)']
         },
     },
 }
@@ -125,6 +128,9 @@ def train_part(model, optimizer, device, loader_train, loader_val, epochs=1):
         print(f"Epoch: {e}, Avg Train Loss: {avg_train_loss:.4f}, Avg Validation Loss: {avg_validation_loss:.4f}")
         acc = check_accuracy(loader_val, model, device)
         wandb.log({"accuracy": acc, "train_loss": avg_train_loss, "validation_loss": avg_validation_loss})
+        if e == 2 and acc < 0.25:
+            print(f"Stopping early at epoch {e} due to low accuracy.")
+            return
 
 
 def get_device(USE_GPU=True):
@@ -154,7 +160,7 @@ def train(config = None):
         # define and train the network
         layers = ast.literal_eval(config.layers)
         print("Layers Config",layers)
-        model = MyResNet(layers)
+        model = MyResNet(config.blocks, layers)
         device = get_device()
         loader_train, loader_val, loader_test = get_transformed_data()
 
@@ -176,8 +182,8 @@ def train(config = None):
 if __name__ == "__main__":
     os.environ['WANDB_DIR'] = '/vol/bitbucket/mc620/DeepLearningCW1/' 
     # sweep_id = wandb.sweep(sweep=SWEEP_CONFIG, project="DL Coursework 1")
-    sweep_id = "m4mwb9u0"
+    sweep_id = "apph5f22"
     print("Sweep_id",sweep_id)
-    wandb.agent(sweep_id, train, project="DL Coursework 1", count=50)
+    wandb.agent(sweep_id, train, project="DL Coursework 1", count=300)
     
     
