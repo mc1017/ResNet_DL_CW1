@@ -2,7 +2,8 @@ import torch
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
-DATA_PATH = "/vol/bitbucket/mc620/DeepLearningCW1/dataset/"
+# DATA_PATH = "/vol/bitbucket/mc620/DeepLearningCW1/dataset/"
+DATA_PATH = "/home/marco/Documents/Deep-Learning-CW1/dataset/"
 
 
 def get_transformed_data():

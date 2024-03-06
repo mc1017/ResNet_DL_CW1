@@ -6,16 +6,16 @@ import torch.nn.functional as F
 import wandb
 import ast
 import os
+import argparse
 
 dtype = torch.float32
 rng_seed = 90
 torch.manual_seed(rng_seed)
 
-
 SWEEP_CONFIG = {
-    "method": "random",
+    "method": "bayes",
     "run_cap": 500,
-    "name": "Early Stopping + Less Epoch + Adam",
+    "name": "Bayes + Early Stopping + Less Epoch + Adam",
     "metric": {"goal": "maximize", "name": "accuracy"},
     "parameters": {
         "epochs": {"values": [10]},
@@ -27,7 +27,7 @@ SWEEP_CONFIG = {
             'values': ['adam', 'adamw'] #'adamax', 'sgd'
         },
         'blocks': {
-            'values': ['residual', 'bottleneck'] # 'wide', ,
+            'values': ['residual'] # 'wide', 'bottleneck'
         },
         'layers': {
             'values': ['(2, 2, 2, 2)',
@@ -128,14 +128,16 @@ def train_part(model, optimizer, device, loader_train, loader_val, epochs=1):
         print(f"Epoch: {e}, Avg Train Loss: {avg_train_loss:.4f}, Avg Validation Loss: {avg_validation_loss:.4f}")
         acc = check_accuracy(loader_val, model, device)
         wandb.log({"accuracy": acc, "train_loss": avg_train_loss, "validation_loss": avg_validation_loss})
-        if e == 2 and acc < 0.25:
+        if e == 1 and acc < 0.35:
             print(f"Stopping early at epoch {e} due to low accuracy.")
             return
 
 
-def get_device(USE_GPU=True):
-    if USE_GPU and torch.cuda.is_available():
-        device = torch.device("cuda:0")
+def get_device(gpu_index=None):
+    if gpu_index is None:
+        gpu_index = 0  # Default to GPU 0
+    if torch.cuda.is_available():
+        device = torch.device(f"cuda:{gpu_index}")
     else:
         device = torch.device("cpu")
     print(device)
@@ -153,15 +155,15 @@ def build_optimiser(model, optimizer, learning_rate, decay=1e-7, momentum=0.9):
     return optimizer
 
 
-def train(config = None):
+def train(config=None):
     with wandb.init(config=config):
         config = wandb.config
-        
+        print(dict(config))
         # define and train the network
         layers = ast.literal_eval(config.layers)
         print("Layers Config",layers)
         model = MyResNet(config.blocks, layers)
-        device = get_device()
+        device = get_device(args.gpu_index)
         loader_train, loader_val, loader_test = get_transformed_data()
 
         params = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -174,15 +176,22 @@ def train(config = None):
 
         # Save the model
         # Define the directory where you want to save your models
-        model_save_dir = '/vol/bitbucket/mc620/DeepLearningCW1/models/'
+        # model_save_dir = '/vol/bitbucket/mc620/DeepLearningCW1/models/'
+        model_save_dir = '/home/marco/Documents/Deep-Learning-CW1/trained-models'
         os.makedirs(model_save_dir, exist_ok=True)
         model_save_path = os.path.join(model_save_dir, f"model_{wandb.run.id}.pt")
         torch.save(model.state_dict(), model_save_path)
 
+args = None
 if __name__ == "__main__":
-    os.environ['WANDB_DIR'] = '/vol/bitbucket/mc620/DeepLearningCW1/' 
-    # sweep_id = wandb.sweep(sweep=SWEEP_CONFIG, project="DL Coursework 1")
-    sweep_id = "apph5f22"
+    parser = argparse.ArgumentParser(description="Select GPU Device")
+    parser.add_argument('--gpu-index', type=int, default=0, help="GPU index to use")
+    args = parser.parse_args()
+    device = get_device(args.gpu_index)
+    
+    # os.environ['WANDB_DIR'] = '/vol/bitbucket/mc620/DeepLearningCW1/' 
+    sweep_id = wandb.sweep(sweep=SWEEP_CONFIG, project="DL Coursework 1")
+    # sweep_id = "iimarg9g"
     print("Sweep_id",sweep_id)
     wandb.agent(sweep_id, train, project="DL Coursework 1", count=300)
     

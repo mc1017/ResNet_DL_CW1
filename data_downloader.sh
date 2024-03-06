@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Define the dataset directory
-DATASET_DIR="/vol/bitbucket/mc620/DeepLearningCW1/dataset"
+# DATASET_DIR="/vol/bitbucket/mc620/DeepLearningCW1/dataset"
+DATASET_DIR="/home/marco/Documents/Deep-Learning-CW1/dataset"
 
 # Check if the dataset directory exists, create if it does not
 if [ ! -d "$DATASET_DIR" ]; then
